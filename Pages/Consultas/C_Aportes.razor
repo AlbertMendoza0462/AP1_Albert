@@ -1,0 +1,108 @@
+﻿@page "/aportes"
+@inject AportesBLL aportesBLL;
+@inject NavigationManager navigationManager;
+
+<EditForm Model="aportes" OnSubmit="buscar">
+    <div class="card">
+        <div class="card-header">
+            <h3>Consulta de Aportes</h3>
+        </div>
+        <div class="card-body">
+            <label class="form-label">Desde</label>
+            <InputDate class="form-control-sm" @bind-Value="FechaDesde"/><br />
+            <label class="form-label">Hasta</label>
+            <InputDate class="form-control-sm" @bind-Value="FechaHasta"/><br /><br />
+
+            <label>Campo Filtrar</label><br />
+            <InputSelect class="form-control-sm" @bind-Value="criterio">
+                <option value="0">Todo</option>
+                <option value="1">Persona</option>
+                <option value="2">Aporte ID</option>
+            </InputSelect>
+            @if (criterio != "0")
+            {
+                <InputText @bind-Value="texto" />
+            }
+            else
+            {
+                <InputText @bind-Value="texto" disabled />
+            }
+            <br /><br />
+
+            <button type="submit" class="btn btn-outline-info">Buscar</button>
+            <table class="table table-striped table-hover table-success mt-4" style="cursor: pointer">
+                @if (aportes.Count > 0)
+                {
+                    <thead>
+                        <tr>
+                            <th>AporteID</th>
+                            <th>Persona</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                }
+                <tbody>
+                    @if (true)
+                    {
+                        conteo = 0;
+                        sumMonto = 0;
+                    }
+                    @foreach (var aporte in aportes)
+                    {
+                        sumMonto += aporte.Monto;
+                        conteo++;
+                        <tr @onclick="(() => redireccionar(aporte.AporteID))">
+                            <td>@aporte.AporteID</td>
+                            <td>@aporte.Persona</td>
+                            <td>@aporte.Monto</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <label>Conteo</label>
+            <InputNumber class="form-control-sm" @bind-Value="conteo" style="width:100px" disabled/>
+            <label style="margin-left: 200px">Total</label>
+            <InputNumber class="form-control-sm" @bind-Value="sumMonto" style="width:100px" disabled/>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    List<Aportes> aportes { get; set; } = new List<Aportes>();
+    public DateTime FechaDesde { get; set; } = new DateTime();
+    public DateTime FechaHasta { get; set; } = DateTime.Now;
+    public string? criterio { get; set; }
+    public string texto { get; set; } = "";
+    public int conteo { get; set; }
+    public double sumMonto { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        conteo = 0;
+        sumMonto = 0;
+    }
+
+    public void redireccionar(int aporteID)
+    {
+        navigationManager.NavigateTo("aporte/" + aporteID);
+    }
+
+    public void buscar()
+    {
+        switch (criterio)
+        {
+            case "1":
+                aportes = aportesBLL.GetAportesPorPersona(texto, FechaDesde, FechaHasta);
+                break;
+            case "2":
+                aportes = aportesBLL.GetAportesPorAporteID(texto, FechaDesde, FechaHasta);
+                break;
+            default:
+                aportes = aportesBLL.GetAportesPorFecha(texto, FechaDesde, FechaHasta);
+                break;
+        }
+    }
+}

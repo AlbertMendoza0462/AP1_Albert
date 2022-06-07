@@ -1,0 +1,94 @@
+﻿@page "/aporte"
+@page "/aporte/{AporteID:int}"
+@inject AportesBLL aportesBLL;
+@inject NavigationManager navigationManager;
+
+<EditForm Model="aporte" OnValidSubmit="guardar">
+    <DataAnnotationsValidator/>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Registro de Aportes</h3>
+        </div>
+        <div class="card-body">
+            <label class="form-label" for="AporteID">Aporte ID</label><br />
+            @if (AporteID == 0)
+            {
+                <InputNumber id="AporteID" class="form-control-sm" @bind-Value="aporte.AporteID" style="width:100px"/>
+            }
+            else
+            {
+                <InputNumber id="AporteID" class="form-control-sm" @bind-Value="aporte.AporteID" style="width:100px" disabled />
+            }
+            <button type="button" class="btn btn-outline-primary" @onclick="() => buscar(aporte.AporteID)">Buscar</button><br />
+            <ValidationMessage For="(() => aporte.AporteID)"/>
+            <label class="form-label" for="Persona">Persona</label>
+            <InputText id="Persona" class="form-control" @bind-Value="aporte.Persona"/>
+            <ValidationMessage For="(() => aporte.Persona)"/>
+            <label class="form-label" for="Monto">Monto</label>
+            <InputNumber id="Monto" class="form-control" @bind-Value="aporte.Monto"/>
+            <ValidationMessage For="(() => aporte.Monto)"/>
+        </div>
+        <div class="card-footer btn-group" role="group">
+            <button class="btn btn-outline-primary" type="button" @onclick="nuevo">Nuevo</button>
+            <button class="btn btn-outline-success" type="submit">Guardar</button>
+            <button class="btn btn-outline-danger" type="button" @onclick="eliminar">Eliminar</button>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int AporteID { get; set; }
+    public Aportes aporte { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        aporte = new Aportes();
+
+        if (AporteID > 0)
+        {
+            Aportes? aporteTemporal = aportesBLL.Buscar(AporteID);
+            if (aporteTemporal != null)
+            {
+                aporte = aporteTemporal;
+            }
+        }
+    }
+
+    public void buscar(int aporteID)
+    {
+        Aportes? aporteTemporal = aportesBLL.Buscar(aporteID);
+        if (aporteTemporal != null)
+            aporte = aporteTemporal;
+        else
+            Console.WriteLine("No se encontro");
+    }
+
+    public void nuevo()
+    {
+        aporte = new Aportes();
+        if (AporteID > 0)
+            navigationManager.NavigateTo("aporte");
+    }
+
+    public void guardar()
+    {
+        aporte.Fecha = DateTime.Now;
+        if (aportesBLL.Guardar(aporte))
+            nuevo();
+        else
+            Console.WriteLine("No se pudo guardar");
+    }
+
+    public void eliminar()
+    {
+        if (aportesBLL.Eliminar(aporte))
+            nuevo();
+        else
+            Console.WriteLine("No se pudo eliminar");
+    }
+}
